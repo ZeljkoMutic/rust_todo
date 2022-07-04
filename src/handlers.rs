@@ -1,4 +1,3 @@
-use actix_web::Responder;
 use super::models::{NewUser, User};
 use super::schema::users::dsl::*;
 use super::Pool;
