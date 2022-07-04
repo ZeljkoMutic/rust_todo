@@ -1,9 +1,9 @@
 table! {
-    todos(id) {
-        id -> Varchar,
-        user_id -> Varchar,
-        content -> Text, 
-        checked -> Bool,
+    users(id){
+        id -> Int4,
+        first_name -> Text, 
+        last_name -> Text,
+        email -> Text,
+        created_at -> Timestamp,
     }
 }
-

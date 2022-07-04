@@ -1,32 +1,39 @@
-// #[macro_use]
-// extern crate dotenv;
-// pub mod models;
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-pub mod models;
-extern crate dotenv;
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
+use actix_web::{web, App, HttpServer};
+#[macro_use]
+extern crate diesel;
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
+use actix_web::{dev::ServiceRequest,Error};
+use diesel::prelude::*;
+use diesel::r2d2::{self, ConnectionManager};
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
+// mod errors;
+mod handlers;
+mod models;
+mod schema;
 
-#[actix_web::main]
+pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
+
+
+#[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
-        App::new()
-            .service(hello)
-            .service(echo)
-            .route("/hey", web::get().to(manual_hello))
-    })
-    .bind(("127.0.0.1", 8080))?
-    .run()
-    .await
+    dotenv::dotenv().ok();
+    std::env::set_var("RUST_LOG", "actix_web=debug");
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    let manager = ConnectionManager::<PgConnection>::new(database_url);
+    let pool: Pool = r2d2::Pool::builder()
+        .build(manager)
+        .expect("Failed to create pool.");
+
+        HttpServer::new(move || {
+            App::new()
+                .data(pool.clone())
+                .route("/users", web::get().to(handlers::get_users))
+                .route("/users/{id}", web::get().to(handlers::get_user_by_id))
+                .route("/users", web::post().to(handlers::add_user))
+                .route("/users/{id}", web::delete().to(handlers::delete_user))
+        })
+        .bind("127.0.0.1:8080")?
+        .run()
+        .await
 }
