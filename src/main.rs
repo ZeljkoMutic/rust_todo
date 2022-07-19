@@ -23,6 +23,7 @@ async fn main() -> std::io::Result<()> {
 
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     let pool: Pool = r2d2::Pool::builder()
+        .min_idle(Some(1))
         .build(manager)
         .expect("Failed to create pool.");
 
@@ -34,7 +35,7 @@ async fn main() -> std::io::Result<()> {
                 .route("/users", web::post().to(handlers::add_user))
                 .route("/users/{id}", web::delete().to(handlers::delete_user))
         })
-        .bind("127.0.0.1:8080")?
+        .bind(("127.0.0.1",8080))?
         .run()
         .await
 }
