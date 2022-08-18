@@ -26,8 +26,9 @@ fn get_all_users(pool: web::Data<Pool>) -> Result<Vec<User>, diesel::result::Err
 pub async fn get_users(db: web::Data<Pool>) -> Result<HttpResponse, Error> {
     Ok(web::block(move || get_all_users(db))
         .await
-        .map(|user| HttpResponse::Ok().json(user))
         .map_err(|_| HttpResponse::InternalServerError())?)
+        .map(|user| HttpResponse::Ok().json(user))
+    
 }
 
 // GET /users/{id}
@@ -100,3 +101,21 @@ fn delete_single_user(db: web::Data<Pool>, user_id: i32) -> Result<usize, diesel
     Ok(count)
 }
 
+
+// use actix_web::Responder;
+
+// pub async fn get_users() -> impl Responder {
+//     format!("hello from get users")
+// }
+
+// pub async fn get_user_by_id() -> impl Responder {
+//     format!("hello from get users by id")
+// }
+
+// pub async fn add_user() -> impl Responder {
+//     format!("hello from add user")
+// }
+
+// pub async fn delete_user() -> impl Responder {
+//     format!("hello from delete user")
+// }
